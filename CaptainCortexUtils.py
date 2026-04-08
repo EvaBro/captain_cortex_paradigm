@@ -103,30 +103,6 @@ def check_button_press_continuous(PortCodes, window, img_end_time, trial_list, n
     return button_pressed
 
 
-def play_attention_grabber(win, video, PortCodes):
-    # Reset to start (if supported), set volume, and play
-    video.seek(0.0)
-    video.volume = 1.0
-    video.play()
-    
-    clk = core.Clock()
-    while True:
-        video.draw()
-        win.flip()
-        
-        keys = event.getKeys()
-        jsbtns = btn_box.getAllButtons()[1:3]  # adjust indices to your device
-
-        if 'escape' in keys:
-            win.close(); core.quit()
-        if video.status == FINISHED:
-            break
-        if any(jsbtns) or ('space' in keys):
-            # Stop at second buttonpress
-            send_trigger(PortCodes.button)  # sends a trigger that button is pressed
-            video.stop()
-            break            
-    return clk.getTime()  # how long the attention video actually ran            
 
 def check_button_press(PortCodes):
     btn_pressed = False
