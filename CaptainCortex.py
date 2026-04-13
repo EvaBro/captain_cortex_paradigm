@@ -10,6 +10,10 @@ After presentation of the circles, the participant is shown an image.
 If the image is that of an astronaut (Captain Cortex), they are instructed to
 press the red button.
 
+Note that the circle images taken from the original FacesCircles paradigm were 
+too small for the desired visual angle, and enlarging them caused them to appear 
+pixelated. To make them look smoother, I enlarged them offline with interpolation 
+using the EnlargeCircles script.
 Controls:
     - red button:   button press (linked to trigger)
     - space:        enter trial loop after showing instruction screen / button press during trial loop (linked to trigger)
@@ -120,6 +124,8 @@ intro_screen.draw()
 window.flip()
 
 #%% Meanwhile, load the stimuli and randomize their order
+print('Loading all images. This may take a few seconds.')
+
 
 # Sort circles first, make sure they are sorted naturally instead of alphabetically
 circle_files.sort(key=lambda f: int("".join(c for c in f if c.isdigit()))) 
@@ -180,41 +186,47 @@ window.flip()
 core.wait(ready_duration/3)
 
 #%% Trial loop
+
+# Initialize
 circle_idx = 0
+buttonClock = core.Clock()
+prev_button_state = False
+prev_button_time = float('-inf')
 window.setRecordFrameIntervals(True) # Enable frame timing diagnostics
+
 for trial_idx in range(num_trials):
     
     # Present still circle
+    window.callOnFlip(utils.send_trigger, PortCodes.still_circle)
     for frame_idx in range(num_circle_frames):
         circles[circle_idx].draw()
-        window.callOnFlip(utils.send_trigger, PortCodes.still_circle)
         window.flip()
-        utils.check_keys(window, PortCodes)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
     
     # Present moving circle
+    window.callOnFlip(utils.send_trigger, PortCodes.moving_circle)
     for frame_idx in range(num_circle_frames):
         circles[circle_idx].draw()
-        window.callOnFlip(utils.send_trigger, PortCodes.moving_circle)
         window.flip()
         circle_idx += circle_speed # Loop through circles by updating the circle index
         circle_idx = circle_idx%len(circle_files) # Make sure index doesn't go out of range
-        utils.check_keys(window, PortCodes)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
     
     # Present image
+    if is_target[trial_idx]:
+        window.callOnFlip(utils.send_trigger, PortCodes.target_image)
+    else:
+        window.callOnFlip(utils.send_trigger, PortCodes.nontarget_image)  
     for frame_idx in range(num_image_frames):
         stim_images[trial_idx].draw()
-        if is_target[trial_idx]:
-            window.callOnFlip(utils.send_trigger, PortCodes.target_image)
-        else:
-            window.callOnFlip(utils.send_trigger, PortCodes.nontarget_image)        
         window.flip()
-        utils.check_keys(window, PortCodes)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
             
     # Present fixation
     for frame_idx in range(num_fixation_frames[trial_idx]):
         fixation.draw()
         window.flip()
-        utils.check_keys(window, PortCodes)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
 
 # Draw end screen
 end_screen.draw()

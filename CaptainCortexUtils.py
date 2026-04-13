@@ -136,7 +136,32 @@ def restore_window_positions(positions):
             )
 
 
-def check_keys(window, PortCodes):
+def ButtonStateMachine(buttonClock, keys, jsbtns, trig_code, prev_button_state, prev_button_time):
+    """
+    Debounced button state machine, allowing semi-continuous button-press detection while ensuring one press = one trigger. 
+    Our button box tends to 'get stuck', i.e. when a button is pressed it stays down for a bit too long, causing multiple triggers to be fired. 
+    The button state machine only fires on new presses (edge: up -> down), and enforces a minimum interval between triggers to mitigate this problem.
+    """
+    now_time = buttonClock.getTime()
+    
+    button_now = any(jsbtns) or 'space' in keys
+    is_new_press = button_now and not prev_button_state
+    button_time_ok = (now_time - prev_button_time) > 0.2
+    
+    # Default: keep previous time if nothing happens
+    new_button_time = prev_button_time
+    
+    # Fire trigger only for *new* presses, spaced in time
+    if is_new_press and button_time_ok:
+        send_trigger(trig_code)
+        new_button_time = now_time
+    
+    new_button_state = button_now
+    
+    return new_button_state, new_button_time
+
+
+def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time):
     keys = event.getKeys() # This also clears the buffer so no need to clear it manually if the loop is tight enough (i.e. if this function is called every frame)
     jsbtns = btn_box.getAllButtons()[1:3]  
     if 'escape' in keys:
@@ -154,8 +179,7 @@ def check_keys(window, PortCodes):
             if 'r' in keys:
                 paused = False
             core.wait(0.005)
-    if any(jsbtns) or ('space' in keys):
-        send_trigger(PortCodes.button)  #sends a trigger that button is pressed
-        print('button pressed')
+    new_button_state, new_button_time = ButtonStateMachine(buttonClock, keys, jsbtns, PortCodes.button, prev_button_state, prev_button_time)
+    return new_button_state, new_button_time
                 
             
