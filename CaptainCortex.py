@@ -197,7 +197,7 @@ window.setRecordFrameIntervals(True) # Enable frame timing diagnostics
 for trial_idx in range(num_trials):
     
     # Present still circle
-    window.callOnFlip(utils.send_trigger, PortCodes.still_circle)
+    window.callOnFlip(utils.send_trigger, PortCodes.still_circle) # Make sure this is only done once, at the first flip
     for frame_idx in range(num_circle_frames):
         circles[circle_idx].draw()
         window.flip()
