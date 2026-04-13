@@ -64,61 +64,12 @@ def create_window(win_size, screen_idx):
     #print('Refresh ~', fr, 'Hz')
     return window
 
-def scale_imgs(images, scale_w, scale_h):
-    for img in images:
-        img_w = img.size[0]*scale_w
-        img_h = img.size[1]*scale_h
-        img.size = (img_w, img_h)
         
 def send_trigger(code):
     trig_port.setData(code)
     core.wait(trigger_time)
     trig_port.setData(0)
     
-def check_button_press_continuous(PortCodes, window, img_end_time, trial_list, n_trials_completed):
-    # Return button_pressed (bool)
-    button_pressed = False
-    while core.getTime() < img_end_time:
-        window.flip()
-        keys = event.getKeys()
-        jsbtns = btn_box.getAllButtons()[1:3]  # adjust indices to your device
-        if any(jsbtns) or ('space' in keys):
-            send_trigger(PortCodes.button)  #sends a trigger that button is pressed
-            button_pressed = True        
-        if 'escape' in keys:
-            pd.DataFrame(trial_list[:n_trials_completed]).to_csv("trial_log.csv", index=False)
-            intervals = np.array(window.frameIntervals)
-            dropped = window.nDroppedFrames
-
-            print("\n=== Frame Timing Diagnostics ===")
-            print(f"Total flips:               {len(intervals)}")
-            print(f"Dropped frames:            {dropped}")
-            print(f"Median interval (s):       {np.median(intervals):.6f}")
-            print(f"Mean interval (s):         {np.mean(intervals):.6f}")
-            print(f"Std dev interval (s):      {np.std(intervals):.6f}")
-            print(f"Estimated refresh (Hz):    {1.0 / np.median(intervals):.2f}")
-            print("=================================\n")
-            window.close()
-            core.quit()
-    return button_pressed
-
-
-
-def check_button_press(PortCodes):
-    btn_pressed = False
-    jsbtns = btn_box.getAllButtons()[1:3]
-    if any(jsbtns):
-         print(jsbtns)
-         send_trigger(PortCodes.button)  #sends a trigger that button is pressed
-         btn_pressed = True        
-    return btn_pressed
-        
-def img_playing(clock, img_end_time):
-    current_time = clock.getTime()
-    if current_time < img_end_time:
-        return True
-    else:
-        return False
     
 def print_frame_timing_diagnostics(window):
     intervals = np.array(window.frameIntervals)
@@ -184,26 +135,27 @@ def restore_window_positions(positions):
                 win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
             )
 
-def ButtonStateMachine(buttonClock, keys, jsbtns, trig_code, prev_button_state, prev_button_time):
-    """
-    Debounced button state machine.
-    - Only fires on new presses (edge: up -> down)
-    - Enforces a minimum interval between triggers
-    """
-    now_time = buttonClock.getTime()
-    
-    button_now = any(jsbtns) or 'space' in keys
-    is_new_press = button_now and not prev_button_state
-    button_time_ok = (now_time - prev_button_time) > 0.2
-    
-    # Default: keep previous time if nothing happens
-    new_button_time = prev_button_time
-    
-    # Fire trigger only for *new* presses, spaced in time
-    if is_new_press and button_time_ok:
-        send_trigger(trig_code)
-        new_button_time = now_time
-    
-    new_button_state = button_now
-    
-    return new_button_state, new_button_time
+
+def check_keys(window, PortCodes):
+    keys = event.getKeys() # This also clears the buffer so no need to clear it manually if the loop is tight enough (i.e. if this function is called every frame)
+    jsbtns = btn_box.getAllButtons()[1:3]  
+    if 'escape' in keys:
+        print_frame_timing_diagnostics(window)
+        window.close()
+        core.quit()
+    if 'p' in keys:
+        paused = True
+        while paused:
+            keys = event.getKeys()
+            if 'escape' in keys:
+                print_frame_timing_diagnostics(window)
+                window.close()
+                core.quit()
+            if 'r' in keys:
+                paused = False
+            core.wait(0.005)
+    if any(jsbtns) or ('space' in keys):
+        send_trigger(PortCodes.button)  #sends a trigger that button is pressed
+        print('button pressed')
+                
+            
