@@ -22,12 +22,16 @@ Controls:
     - r:            resumes the experiment after pause
 """
 
-import CaptainCortexUtils as utils
 import numpy as np
 from enum import IntFlag
-from ParallelButtonBox import ButtonBox
 from psychopy import visual, event, core
 import os
+import sys
+
+sys.path.append(r'C:\Experiments\TaylorLab\python_utils') 
+from ParallelButtonBox import ButtonBox
+import OptitrackUtils as opti
+import ExperimentUtils as utils
 
 os.chdir(os.path.dirname(os.path.abspath(__file__))) 
 
@@ -89,7 +93,7 @@ num_image_frames = np.round(image_duration*framerate).astype(int)
 circle_files = utils.create_img_list(circles_folder)
 nontarget_files = utils.create_img_list(nontarget_folder)
 
-#%% Set up window and button box
+#%% Set up window and hardware
 
 # Create buttonbox    
 btn_box = ButtonBox(address=0xdff8)
@@ -97,6 +101,10 @@ btn_box = ButtonBox(address=0xdff8)
 # Create a window
 win_size = utils.get_window_size(screen_idx) 
 window = utils.create_window(win_size, screen_idx)
+
+# Set up Optitrack
+client = opti.setup()
+opti.set_take_name(client, 'CaptainCortex')
 
 #%% Create screens
 intro_screen = visual.ImageStim(window, pos=(0,0), image=instruction, size=win_size)
@@ -173,6 +181,11 @@ while not ready:
         core.quit()
     if 'space' in keys:
         ready = True
+        
+# Start Optitrack
+opti.start_recording(client)
+
+# Draw get ready screens
 ready_screen.draw()
 window.flip()
 core.wait(ready_duration/3)
@@ -201,7 +214,7 @@ for trial_idx in range(num_trials):
     for frame_idx in range(num_circle_frames):
         circles[circle_idx].draw()
         window.flip()
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
     
     # Present moving circle
     window.callOnFlip(utils.send_trigger, PortCodes.moving_circle)
@@ -210,7 +223,7 @@ for trial_idx in range(num_trials):
         window.flip()
         circle_idx += circle_speed # Loop through circles by updating the circle index
         circle_idx = circle_idx%len(circle_files) # Make sure index doesn't go out of range
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
     
     # Present image
     if is_target[trial_idx]:
@@ -220,13 +233,13 @@ for trial_idx in range(num_trials):
     for frame_idx in range(num_image_frames):
         stim_images[trial_idx].draw()
         window.flip()
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
             
     # Present fixation
     for frame_idx in range(num_fixation_frames[trial_idx]):
         fixation.draw()
         window.flip()
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
 
 # Draw end screen
 end_screen.draw()
