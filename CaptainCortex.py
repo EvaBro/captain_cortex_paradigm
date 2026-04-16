@@ -27,6 +27,8 @@ from enum import IntFlag
 from psychopy import visual, event, core
 import os
 import sys
+import pandas as pd
+from datetime import datetime
 
 sys.path.append(r'C:\Experiments\TaylorLab\python_utils') 
 from ParallelButtonBox import ButtonBox
@@ -54,6 +56,7 @@ circles_folder = "./circles_enlarged/"
 nontarget_folder = './nontarget_images/'
 target_image = './captain_image/astronaut1.png'
 instruction = './instructions/Instruction_black.PNG'
+log_folder = r'C:\Experiments\TaylorLab\OPM07 - UKRI\logs'
 
 # Triggers
 class PortCodes(IntFlag):
@@ -169,6 +172,16 @@ stim_images = np.empty(num_trials, dtype=object)
 stim_images[is_target.astype(bool)] = visual.ImageStim(window, pos=(0,0), image=target_image, size=img_size)
 stim_images[~is_target.astype(bool)] = [visual.ImageStim(window, pos=(0,0), image=img, size=img_size) for img in nontarget_list]
 
+#%% Logging
+log_df = pd.DataFrame({'image': [stimobj.image for stimobj in stim_images]})
+log_df['is_target'] = is_target
+
+def save_data(): # This is not pretty, but it works
+    now = datetime.now()
+    save_folder = log_folder + '\\' + now.strftime("%Y%m%d")
+    os.makedirs(save_folder, exist_ok=True)
+    log_df.to_csv(save_folder + '\\CaptainCortex_' + now.strftime("%Y-%m-%d_%H-%M-%S") + '.csv', index=False)
+
 #%% Wait a bit longer if needed, until ready
 event.clearEvents() # Clear the keyboard events buffer to make sure previous button presses are ignored
 print('All images loaded. Press space when ready.')
@@ -206,6 +219,7 @@ buttonClock = core.Clock()
 prev_button_state = False
 prev_button_time = float('-inf')
 window.setRecordFrameIntervals(True) # Enable frame timing diagnostics
+drops_before = 0
 
 for trial_idx in range(num_trials):
     
@@ -214,7 +228,10 @@ for trial_idx in range(num_trials):
     for frame_idx in range(num_circle_frames):
         circles[circle_idx].draw()
         window.flip()
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client, save_function=save_data)
+    
+    log_df.loc[trial_idx, 'dropped_frames_still'] = window.nDroppedFrames - drops_before
+    drops_before = window.nDroppedFrames
     
     # Present moving circle
     window.callOnFlip(utils.send_trigger, PortCodes.moving_circle)
@@ -223,7 +240,10 @@ for trial_idx in range(num_trials):
         window.flip()
         circle_idx += circle_speed # Loop through circles by updating the circle index
         circle_idx = circle_idx%len(circle_files) # Make sure index doesn't go out of range
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client, save_function=save_data)
+    
+    log_df.loc[trial_idx, 'dropped_frames_moving'] = window.nDroppedFrames - drops_before
+    drops_before = window.nDroppedFrames
     
     # Present image
     if is_target[trial_idx]:
@@ -233,18 +253,29 @@ for trial_idx in range(num_trials):
     for frame_idx in range(num_image_frames):
         stim_images[trial_idx].draw()
         window.flip()
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
-            
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client, save_function=save_data)
+    
+    log_df.loc[trial_idx, 'dropped_frames_image'] = window.nDroppedFrames - drops_before
+    drops_before = window.nDroppedFrames
+    
     # Present fixation
     for frame_idx in range(num_fixation_frames[trial_idx]):
         fixation.draw()
         window.flip()
-        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client)
+        prev_button_state, prev_button_time = utils.check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, client, save_function=save_data)
+
+    log_df.loc[trial_idx, 'dropped_frames_fix'] = window.nDroppedFrames - drops_before
+    drops_before = window.nDroppedFrames
+
+# Save log
+save_data()
 
 # Draw end screen
 end_screen.draw()
 window.flip()
 core.wait(end_duration)
+
+opti.stop_recording(client)
 
 window.close()
 core.quit()
