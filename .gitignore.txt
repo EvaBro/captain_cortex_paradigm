@@ -1,0 +1,6 @@
+__pycache__/
+captain_image/
+circles_enlarged/
+circles_original/
+instructions/
+nontarget_images/
