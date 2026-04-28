@@ -21,8 +21,8 @@ Outputs:
     - A log file will be written to a folder of your choice. The log file 
       contains the exact file names of the images that were presented, as well 
       as the number of frame drops that occurred during each trial, if any. 
-      E.g. having a browser window open on the DisneyPlus homepage with some 
-      graphics playing in the background will dramatically affect timing.
+      E.g. having a browser window open with some graphics playing in the 
+      background will dramatically affect timing.
     - (Optional) Optitrack recording, starts and stops automatically. 
       If you want this functionality, make sure the Motive software is running and set up 
 """
@@ -44,7 +44,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 #%% System-dependent parameters - change these as needed
 
-# Do not forget to set trigger and button box 
+# Do not forget to set up triggers and button box in the ExperimentUtils module
 
 # File paths
 circles_folder = "./circles_enlarged/"
@@ -56,7 +56,7 @@ log_folder = r'C:\Experiments\TaylorLab\OPM07 - UKRI\logs'
 # Monitor framerate in Hz, system-dependent. 
 # Make sure this is set correctly otherwise all the timings will be off 
 # (the script uses frame-based timing not clock-based). 
-framerate = 60; 
+framerate = 60
 
 # Screen on which video is displayed
 screen_idx=0
@@ -72,8 +72,8 @@ class PortCodes(IntFlag):
     button = 32         # Trigger 6 for button press
     all = 255         # Send trigger to all ports
 
-# Whether or not to use Optitrack
-optitrack = True
+# Whether or not to use head motion tracking, set to False if you don't have Optitrack
+optitrack = False
 
 #%% General parameters
 # Timing parameters
@@ -81,7 +81,7 @@ num_trials = 80 # number of trials
 stimulus_duration = 2 # duration of still and moving circles in s
 image_duration = 0.5 # duration of image presentation in s
 fixation_duration = 1.8 # average duration of fixation
-max_jitter = 0.2; # jitter duration in s, effective fixation duration will be between [fixation_duration - max_jitter, fixation_duration + max_jitter]
+max_jitter = 0.2 # jitter duration in s, effective fixation duration will be between [fixation_duration - max_jitter, fixation_duration + max_jitter]
 circle_speed = 7 # How many circle files are skipped to generate a 'movie', analogous to Presentation
 ready_duration = 3 # duration of ready set go sequence
 end_duration = 2 # duration of the final message in s
@@ -229,7 +229,7 @@ core.wait(ready_duration/3)
 #%% Trial loop
 
 # Initialize
-circle_idx = 0
+circle_idx = 0 # Note that this is intentionally not updated in the trial loop, the next still circle starts at the frame where the moving circles ended
 buttonClock = core.Clock()
 prev_button_state = False
 prev_button_time = float('-inf')
@@ -282,20 +282,14 @@ for trial_idx in range(num_trials):
     log_df.loc[trial_idx, 'dropped_frames_fix'] = window.nDroppedFrames - drops_before
     drops_before = window.nDroppedFrames
 
-# Save log
-save_data()
-
 # Draw end screen
 end_screen.draw()
 window.flip()
 core.wait(end_duration)
 
-if optitrack:
-    opti.stop_recording(client)
-
-window.close()
-core.quit()
-        
+# Quit and save log
+utils.print_frame_timing_diagnostics(window)
+utils.quit_experiment(window,client,save_data)
 
 
 
