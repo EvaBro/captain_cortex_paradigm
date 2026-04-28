@@ -30,28 +30,27 @@ Outputs:
 import numpy as np
 from enum import IntFlag
 from psychopy import visual, event, core
-import os
 import sys
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
+import os
 
-sys.path.append(r'C:\Experiments\TaylorLab\stim_utils') # Change folder name if needed
-import ExperimentUtils as utils
+BASE_DIR = Path(__file__).parent
+sys.path.append(str(BASE_DIR.parent / 'stim_utils'))
 import OptitrackUtils as opti
-
-
-os.chdir(os.path.dirname(os.path.abspath(__file__))) 
+import ExperimentUtils as utils
 
 #%% System-dependent parameters - change these as needed
 
 # Do not forget to set up triggers and button box in the ExperimentUtils module
 
 # File paths
-circles_folder = "./circles_enlarged/"
-nontarget_folder = './nontarget_images/'
-target_image = './captain_image/astronaut1.png'
-instruction = './instructions/Instruction_black.PNG'
-log_folder = r'C:\Experiments\TaylorLab\OPM07 - UKRI\logs'
+circles_folder = BASE_DIR / "circles_enlarged"
+nontarget_folder = BASE_DIR / 'nontarget_images'
+target_image = BASE_DIR / 'captain_image/astronaut1.png'
+instruction = BASE_DIR / 'instructions' / 'Instruction_black.PNG'
+log_folder = BASE_DIR.parent / 'OPM07 - UKRI' / 'logs'
 
 # Monitor framerate in Hz, system-dependent. 
 # Make sure this is set correctly otherwise all the timings will be off 
@@ -152,7 +151,7 @@ print('Loading all images. This may take a few seconds.')
 
 
 # Sort circles first, make sure they are sorted naturally instead of alphabetically
-circle_files.sort(key=lambda f: int("".join(c for c in f if c.isdigit()))) 
+circle_files.sort(key=lambda f: int("".join(c for c in f.name if c.isdigit()))) 
 circles = [ visual.ImageStim(window, pos=(0,0), image=circle, size=circle_size) for circle in circle_files]
 
 # Randomize nontarget stimuli
@@ -187,14 +186,14 @@ stim_images[is_target.astype(bool)] = visual.ImageStim(window, pos=(0,0), image=
 stim_images[~is_target.astype(bool)] = [visual.ImageStim(window, pos=(0,0), image=img, size=img_size) for img in nontarget_list]
 
 #%% Logging
-log_df = pd.DataFrame({'image': [stimobj.image for stimobj in stim_images]})
+log_df = pd.DataFrame({'image': [stimobj.image.name for stimobj in stim_images]})
 log_df['is_target'] = is_target
 
 def save_data(): # This is not pretty, but it works
     now = datetime.now()
-    save_folder = log_folder + '\\' + now.strftime("%Y%m%d")
+    save_folder = log_folder / now.strftime("%Y%m%d")
     os.makedirs(save_folder, exist_ok=True)
-    log_df.to_csv(save_folder + '\\logCaptainCortex_' + now.strftime("%Y-%m-%d_%H-%M-%S") + '.csv', index=False)
+    log_df.to_csv(save_folder / ('logCaptainCortex_' + now.strftime("%Y-%m-%d_%H-%M-%S") + '.csv'), index=False)
 
 #%% Wait a bit longer if needed, until ready
 event.clearEvents() # Clear the keyboard events buffer to make sure previous button presses are ignored
