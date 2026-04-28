@@ -36,7 +36,6 @@ import pandas as pd
 from datetime import datetime
 
 sys.path.append(r'C:\Experiments\TaylorLab\stim_utils') # Change folder name if needed
-from ParallelButtonBox import ButtonBox
 import ExperimentUtils as utils
 import OptitrackUtils as opti
 
@@ -72,9 +71,6 @@ class PortCodes(IntFlag):
     target_image = 16   # Trigger 5 for Captain Cortex
     button = 32         # Trigger 6 for button press
     all = 255         # Send trigger to all ports
-    
-# Button box
-btn_address = 0xdff8
 
 # Whether or not to use Optitrack
 optitrack = True
