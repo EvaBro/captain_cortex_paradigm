@@ -4,3 +4,11 @@ circles_enlarged/
 circles_original/
 instructions/
 nontarget_images/
+*.mp4
+*.avi
+*.png
+*.PNG
+*.jpg
+*.jpeg
+*.bmp
+*.tiff
