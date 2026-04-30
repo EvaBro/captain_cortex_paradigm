@@ -1,3 +1,6 @@
+## Paradigm
+Trials consist of still and moving circles to elicit visual gamma oscillations. After presentation of the circles, an image is shown. Participants are asked to press a button if the image is that of an astronaut (Captain Cortex), to maintain attention. 
+
 ## Setup
 
 ```
