@@ -26,5 +26,5 @@ YourFolder/
 ```
 
 ## Credits
-This paradigm is based on the Captain CUBRIC paradigm from the CONVERGE Project, developed by Dr. Luke Tait (@lukewtait), Cardiff University Brain Research Imaging Centre (CUBRIC).
-The image stimuli were created using DALL-E.
+This task is based on the Captain CUBRIC paradigm from the CONVERGE Project, developed by Dr. Luke Tait ([lukewtait](https://github.com/lukewtait)), Cardiff University Brain Research Imaging Centre (CUBRIC).
+The stimulus images were created using DALL-E.
