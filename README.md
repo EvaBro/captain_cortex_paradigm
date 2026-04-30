@@ -24,3 +24,7 @@ YourFolder/
     └── captain_image
     └── instructions
 ```
+
+## Credits
+This paradigm is based on the Captain CUBRIC paradigm from the CONVERGE Project, developed by Dr. Luke Tait (@lukewtait), Cardiff University Brain Research Imaging Centre (CUBRIC).
+The image stimuli were created using DALL-E.
