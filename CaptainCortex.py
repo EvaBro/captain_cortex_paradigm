@@ -35,11 +35,16 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 import os
+import psutil
 
 BASE_DIR = Path(__file__).parent
 sys.path.append(str(BASE_DIR.parent / 'stim_utils'))
 import OptitrackUtils as opti
 import ExperimentUtils as utils
+
+# Give psychopy high scheduling priority
+process = psutil.Process(os.getpid())
+process.nice(psutil.HIGH_PRIORITY_CLASS)
 
 #%% System-dependent parameters - change these as needed
 
@@ -72,7 +77,7 @@ class PortCodes(IntFlag):
     all = 255         # Send trigger to all ports
 
 # Whether or not to use head motion tracking, set to False if you don't have Optitrack
-optitrack = False
+optitrack = True
 
 #%% General parameters
 # Timing parameters
