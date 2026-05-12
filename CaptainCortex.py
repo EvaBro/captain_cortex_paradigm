@@ -116,15 +116,15 @@ nontarget_files = utils.create_img_list(nontarget_folder)
 
 #%% Set up window and hardware
 
-# Create a window
-win_size = utils.get_window_size(screen_idx) 
-window = utils.create_window(win_size, screen_idx)
-
 # Set up Optitrack
 if optitrack:
     client = opti.setup()
 else:
     client = None
+
+# Create a window
+win_size = utils.get_window_size(screen_idx) 
+window = utils.create_window(win_size, screen_idx)
 
 #%% Create screens
 intro_screen = visual.ImageStim(window, pos=(0,0), image=instruction, size=win_size)
@@ -213,7 +213,7 @@ while not ready:
         ready = True
         
 # Start Optitrack
-if optitrack:
+if client is not None:
     opti.set_take_name(client, 'CaptainCortex')
     opti.start_recording(client)
 
