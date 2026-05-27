@@ -51,6 +51,7 @@ from datetime import datetime
 from pathlib import Path
 import os
 import psutil
+import argparse
 
 BASE_DIR = Path(__file__).parent
 sys.path.append(str(BASE_DIR.parent / 'stim_utils'))
@@ -60,6 +61,11 @@ import ExperimentUtils as utils
 # Give psychopy high scheduling priority
 process = psutil.Process(os.getpid())
 process.nice(psutil.HIGH_PRIORITY_CLASS)
+
+# Parse subject id
+parser = argparse.ArgumentParser()
+parser.add_argument("--subject", default="")
+args = parser.parse_args()
 
 #%% System-dependent parameters - change these as needed
 
@@ -71,6 +77,9 @@ nontarget_folder = BASE_DIR / 'nontarget_images'
 target_image = BASE_DIR / 'captain_image/astronaut1.png'
 instruction = BASE_DIR / 'instructions' / 'Instruction_black.PNG'
 log_folder = BASE_DIR.parent / 'OPM07 - UKRI' / 'logs'
+
+
+
 
 # Monitor framerate in Hz, system-dependent. 
 # Make sure this is set correctly otherwise all the timings will be off 
@@ -212,6 +221,8 @@ log_df['is_target'] = is_target
 def save_data(): # This is not pretty, but it works
     now = datetime.now()
     save_folder = log_folder / now.strftime("%Y%m%d")
+    if args.subject:
+        save_folder = save_folder / args.subject
     os.makedirs(save_folder, exist_ok=True)
     log_df.to_csv(save_folder / ('logCaptainCortex_' + now.strftime("%Y-%m-%d_%H-%M-%S") + '.csv'), index=False)
 
