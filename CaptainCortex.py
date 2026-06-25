@@ -118,10 +118,10 @@ end_duration = 2 # duration of the final message in s
 p_target = 0.5 # Proportion of trials with Captain Cortex
 init_nontargets = 3 # How many nontarget trials come at the start
 
-# Image sizes
-img_size = 300 # Pixels
-circle_size = 500 # pixels
-fixation_radius = 10 # pixels
+# Image sizes in degree of visual angle
+img_size = 5.189
+circle_size = 8.638 # Note that this is the size of the bounding box; the actual circle size is around 7.4 degrees because they don't span the entire bounding box
+fixation_radius = 0.173
 
 #%% Logistics
 
@@ -148,27 +148,27 @@ else:
 
 # Create a window
 win_size = utils.get_window_size(screen_idx) 
-window = utils.create_window(win_size, screen_idx)
+window = utils.create_window(win_size, screen_idx, units='deg')
 
 #%% Create screens
-intro_screen = visual.ImageStim(window, pos=(0,0), image=instruction, size=win_size)
+intro_screen = visual.ImageStim(window, pos=(0,0), image=instruction, size=(2, 2), units='norm')
 
 ready_screen = visual.TextStim(win=window, text="Ready", color='white',
-                               height=70, alignText='center', anchorHoriz='center',
+                               height=1.2, alignText='center', anchorHoriz='center',
                                anchorVert='center')
 
 set_screen = visual.TextStim(win=window, text="Set", color='white',
-                               height=70, alignText='center', anchorHoriz='center',
+                               height=1.2, alignText='center', anchorHoriz='center',
                                anchorVert='center')
 
 go_screen = visual.TextStim(win=window, text="Go!", color='white',
-                               height=70, alignText='center', anchorHoriz='center',
+                               height=1.2, alignText='center', anchorHoriz='center',
                                anchorVert='center')
 
-fixation = visual.Circle(window, radius=fixation_radius)
+fixation = visual.Circle(window, radius=fixation_radius, units='deg')
 
 end_screen = visual.TextStim(win=window, text="The end.\nThank you for playing!", color='white',
-                               height=70, alignText='center', anchorHoriz='center',
+                               height=1.2, alignText='center', anchorHoriz='center',
                                anchorVert='center')
 
 #%% Display instructions
@@ -181,7 +181,7 @@ print('Loading all images. This may take a few seconds.')
 
 # Sort circles first, make sure they are sorted naturally instead of alphabetically
 circle_files.sort(key=lambda f: int("".join(c for c in f.name if c.isdigit()))) 
-circles = [ visual.ImageStim(window, pos=(0,0), image=circle, size=circle_size) for circle in circle_files]
+circles = [ visual.ImageStim(window, pos=(0,0), image=circle, size=circle_size,  units='deg') for circle in circle_files]
 
 # Randomize nontarget stimuli
 is_target = np.random.choice([0, 1], size=(num_trials,), p=(1-p_target, p_target))
@@ -211,8 +211,8 @@ else:
 
 # Now fill up the list
 stim_images = np.empty(num_trials, dtype=object)
-stim_images[is_target.astype(bool)] = visual.ImageStim(window, pos=(0,0), image=target_image, size=img_size)
-stim_images[~is_target.astype(bool)] = [visual.ImageStim(window, pos=(0,0), image=img, size=img_size) for img in nontarget_list]
+stim_images[is_target.astype(bool)] = visual.ImageStim(window, pos=(0,0), image=target_image, size=img_size, units='deg')
+stim_images[~is_target.astype(bool)] = [visual.ImageStim(window, pos=(0,0), image=img, size=img_size,  units='deg') for img in nontarget_list]
 
 #%% Logging
 log_df = pd.DataFrame({'image': [stimobj.image.name for stimobj in stim_images]})
